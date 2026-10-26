@@ -1,0 +1,392 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>TICTOCKIE — Beyond Tic Tac Toe (Cyberpunk Edition)</title>
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;900&family=Rajdhani:wght@500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet" />
+  <!-- External CSS Link -->
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div id="tictockie-app" class="tt-root" data-fx="high" data-motion="full">
+    <!-- Background Atmospheric Particle Canvas & Scanlines -->
+    <canvas class="tt-particles-canvas" id="tt-canvas"></canvas>
+    <div class="tt-scanlines"></div>
+
+    <div class="tt-shell">
+      <!-- TOP BAR -->
+      <header class="tt-topbar">
+        <div class="tt-brand" id="tt-brand-home" title="Return to Command Deck">
+          <div class="tt-logo-mark">X/O</div>
+          <div class="tt-brand-text">
+            <h1>TICTOCKIE</h1>
+            <span data-i18n="subtitle">BEYOND TIC TAC TOE // CYBER ARENA</span>
+          </div>
+        </div>
+
+        <nav class="tt-nav" aria-label="Main Navigation">
+          <button type="button" class="tt-nav-btn active" data-view="home">🏠 <span data-i18n="nav_home">HOME</span></button>
+          <button type="button" class="tt-nav-btn" data-view="arena">⚔️ <span data-i18n="nav_arena">ARENA</span></button>
+          <button type="button" class="tt-nav-btn" data-view="multiplayer">🌐 <span data-i18n="nav_online">ONLINE ROOMS</span></button>
+          <button type="button" class="tt-nav-btn" data-view="tournament">🏆 <span data-i18n="nav_tourney">TOURNAMENT</span></button>
+          <button type="button" class="tt-nav-btn" data-view="stats">📊 <span data-i18n="nav_stats">PROFILE &amp; RANKS</span></button>
+          <button type="button" class="tt-nav-btn" data-view="settings">⚙️ <span data-i18n="nav_settings">SETTINGS &amp; TESTS</span></button>
+        </nav>
+
+        <div class="tt-status-strip">
+          <span class="tt-pill" id="tt-net-pill">● SYNC READY</span>
+          <button type="button" class="tt-nav-btn" id="tt-btn-fullscreen" title="Toggle Fullscreen">⛶</button>
+        </div>
+      </header>
+
+      <!-- VIEW 1: HOME SCREEN (COMMAND DECK) -->
+      <section class="tt-view active" id="view-home">
+        <div class="tt-hero-banner">
+          <div class="tt-hero-Banner-left">
+            <h2 id="tt-welcome-callsign">WELCOME, COMMANDER</h2>
+            <p data-i18n="hero_desc">Select a tactical protocol below. Authoritative move validation, Alpha-Beta AI, and Neon Reactor systems online.</p>
+          </div>
+          <div class="tt-hero-actions">
+            <button type="button" class="tt-btn gold" id="tt-quick-daily">⚡ DAILY CHALLENGE</button>
+            <button type="button" class="tt-btn" id="tt-quick-reactor">☢️ NEON REACTOR</button>
+          </div>
+        </div>
+
+        <div class="tt-modes-grid" id="tt-modes-container">
+          <!-- Populated dynamically with all 10 modes -->
+        </div>
+      </section>
+
+      <!-- VIEW 2: GAME ARENA -->
+      <section class="tt-view" id="view-arena">
+        <div class="tt-arena-layout">
+          <div class="tt-board-stage">
+            <div class="tt-hud-bar">
+              <div class="tt-player-card active-x" id="tt-card-x">
+                <div class="tt-p-info">
+                  <div class="tt-p-name" id="tt-name-x">PLAYER X</div>
+                  <div class="tt-p-meta" id="tt-meta-x">ELO 1200</div>
+                </div>
+                <div class="tt-p-sym" style="color:var(--neon-x);">X</div>
+              </div>
+
+              <div class="tt-vs-center">
+                <div class="tt-timer-display" id="tt-timer-txt">--:--</div>
+                <div class="tt-turn-badge" id="tt-turn-txt">TURN: X</div>
+              </div>
+
+              <div class="tt-player-card" id="tt-card-o">
+                <div class="tt-p-sym" style="color:var(--neon-o);">O</div>
+                <div class="tt-p-info" style="text-align:right;">
+                  <div class="tt-p-name" id="tt-name-o">CYBER AI</div>
+                  <div class="tt-p-meta" id="tt-meta-o">EXPERT</div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Match Result Notification Banner -->
+            <div class="tt-banner-result" id="tt-match-banner">
+              <span id="tt-banner-msg">VICTORY ACHIEVED!</span>
+              <div style="display:flex; gap:6px;">
+                <button type="button" class="tt-btn gold" id="tt-btn-rematch">REMATCH</button>
+              </div>
+            </div>
+
+            <!-- Interactive Board Container -->
+            <div class="tt-board-wrap" id="tt-board-wrap">
+              <div class="tt-grid-standard" id="tt-grid"></div>
+              <svg class="tt-laser-svg" id="tt-laser-svg" viewBox="0 0 100 100" preserveAspectRatio="none"></svg>
+            </div>
+
+            <!-- Signature Feature: NEON REACTOR Dock -->
+            <div class="tt-reactor-bar" id="tt-reactor-dock" style="display:none;">
+              <div class="tt-reactor-header">
+                <span>☢️ NEON REACTOR CORE</span>
+                <span id="tt-energy-readout">X: 0⚡ | O: 0⚡ (MAX 6⚡)</span>
+              </div>
+              <div class="tt-reactor-abilities">
+                <button type="button" class="tt-btn ghost" id="tt-abi-scan" title="Reveals hidden fog cells or shows AI threat heatmap">
+                  📡 SCAN (2⚡)
+                </button>
+                <button type="button" class="tt-btn ghost" id="tt-abi-shield" title="Locks an empty cell for 1 opponent turn">
+                  🛡️ SHIELD (3⚡)
+                </button>
+                <button type="button" class="tt-btn gold" id="tt-abi-oracle" title="Computes and highlights the optimal tactical move">
+                  🎯 ORACLE (4⚡)
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Right Sidebar: Controls, Rules & Move Log -->
+          <aside class="tt-side-panel">
+            <div class="tt-panel-box">
+              <h3 class="tt-panel-title">ACTIVE PROTOCOL CONFIG</h3>
+              <div class="tt-form-group">
+                <label for="tt-sel-mode">Game Mode</label>
+                <select id="tt-sel-mode" class="tt-select">
+                  <option value="classic">Classic Tic Tac Toe (3×3 Ranked)</option>
+                  <option value="reactor">Neon Reactor (Signature Mode)</option>
+                  <option value="ultimate">Ultimate Tic Tac Toe (9×3×3)</option>
+                  <option value="mega5">Mega Grid 5×5 (4-in-a-Row)</option>
+                  <option value="mega7">Mega Grid 7×7 (4-in-a-Row)</option>
+                  <option value="timeattack">Time Attack Blitz (5s Turn)</option>
+                  <option value="survival">Survival Wave Rush (Scaling AI)</option>
+                  <option value="daily">Daily Tactical Challenge</option>
+                  <option value="blind">Blind Strategy (Fog of War)</option>
+                  <option value="custom">Custom Arena</option>
+                </select>
+              </div>
+
+              <div class="tt-form-group">
+                <label for="tt-sel-opp">Opponent Type</label>
+                <select id="tt-sel-opp" class="tt-select">
+                  <option value="ai_beginner">AI — Beginner (Rookie Drone)</option>
+                  <option value="ai_intermediate">AI — Intermediate (Tactical Bot)</option>
+                  <option value="ai_advanced">AI — Advanced (Neural Core)</option>
+                  <option value="ai_expert" selected="selected">AI — Expert (Alpha-Beta Master)</option>
+                  <option value="local">Local Pass &amp; Play (2 Players)</option>
+                  <option value="online">Online / P2P Room Sync</option>
+                </select>
+              </div>
+
+              <!-- Custom Arena Extra Settings -->
+              <div id="tt-custom-controls" style="display:none; border-top:1px solid rgba(255,255,255,0.1); padding-top:8px; margin-top:8px;">
+                <div class="tt-form-group">
+                  <label for="tt-custom-size">Custom Board Size</label>
+                  <select id="tt-custom-size" class="tt-select">
+                    <option value="3">3×3 Grid</option>
+                    <option value="4">4×4 Grid</option>
+                    <option value="5" selected="selected">5×5 Grid</option>
+                    <option value="7">7×7 Grid</option>
+                  </select>
+                </div>
+                <div class="tt-form-group">
+                  <label for="tt-custom-win">Winning Line Length</label>
+                  <select id="tt-custom-win" class="tt-select">
+                    <option value="3">3-in-a-Row</option>
+                    <option value="4" selected="selected">4-in-a-Row</option>
+                    <option value="5">5-in-a-Row</option>
+                  </select>
+                </div>
+                <div class="tt-form-group">
+                  <label for="tt-custom-timer">Turn Timer (Seconds, 0 = Off)</label>
+                  <input type="number" id="tt-custom-timer" class="tt-input" value="10" min="0" max="60" />
+                </div>
+              </div>
+
+              <div style="display:flex; gap:8px; margin-top:6px; flex-wrap:wrap;">
+                <button type="button" class="tt-btn" style="flex:1;" id="tt-btn-newgame">🔄 NEW MATCH</button>
+                <button type="button" class="tt-btn crimson" style="flex:1;" id="tt-btn-forfeit">🏳️ FORFEIT</button>
+              </div>
+            </div>
+
+            <div class="tt-panel-box">
+              <h3 class="tt-panel-title">MODE BRIEFING &amp; RULES</h3>
+              <div id="tt-mode-rules-text" style="font-size:12.5px; color:var(--text-muted); line-height:1.4;">
+                Standard 3×3 grid. Align 3 symbols horizontally, vertically, or diagonally. Special abilities are disabled in Ranked Classic.
+              </div>
+            </div>
+
+            <div class="tt-panel-box">
+              <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px; flex-wrap:wrap; gap:4px;">
+                <h3 class="tt-panel-title" style="margin:0 !important;">AUTHORITATIVE MOVE LOG</h3>
+                <span id="tt-state-hash" style="font-family:var(--font-mono); font-size:9.5px; color:var(--neon-green);">HASH: #0000</span>
+              </div>
+              <div class="tt-move-log" id="tt-move-log">
+                <div style="color:var(--text-muted);">Awaiting opening move...</div>
+              </div>
+            </div>
+          </aside>
+        </div>
+      </section>
+
+      <!-- VIEW 3: MULTIPLAYER & PRIVATE ROOMS -->
+      <section class="tt-view" id="view-multiplayer">
+        <div class="tt-arena-layout">
+          <div class="tt-panel-box" style="padding:14px;">
+            <h2 style="margin-top:0 !important; font-family:var(--font-display); font-size:clamp(16px, 2.5vw, 20px);">🌐 REAL-TIME MULTIPLAYER &amp; ROOM SYNC</h2>
+            <p style="color:var(--text-muted); font-size:13px;">
+              Create or join an authoritative room code. Supports instant real-time cross-tab synchronization via <code>BroadcastChannel</code> AND cloud synchronization when your Firebase Realtime Database URL is configured in Settings.
+            </p>
+
+            <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 220px), 1fr)); gap:12px; margin-top:12px;">
+              <div class="tt-panel-box">
+                <h3 class="tt-panel-title">CREATE OR JOIN PRIVATE ROOM</h3>
+                <div class="tt-form-group">
+                  <label for="tt-room-code-input">Room Code</label>
+                  <input type="text" id="tt-room-code-input" class="tt-input" value="NEON-77" maxlength="16" />
+                </div>
+                <div class="tt-form-group">
+                  <label for="tt-room-role">Your Role</label>
+                  <select id="tt-room-role" class="tt-select">
+                    <option value="X">Host / Player X</option>
+                    <option value="O">Challenger / Player O</option>
+                    <option value="SPECTATOR">Spectator (Read-Only)</option>
+                  </select>
+                </div>
+                <div style="display:flex; gap:6px; flex-wrap:wrap;">
+                  <button type="button" class="tt-btn" style="flex:1;" id="tt-btn-connect-room">🔗 CONNECT</button>
+                  <button type="button" class="tt-btn gold" style="flex:1;" id="tt-btn-gen-code">🎲 NEW CODE</button>
+                </div>
+              </div>
+
+              <div class="tt-panel-box">
+                <h3 class="tt-panel-title">INVITE &amp; STATE PACKET SYNC</h3>
+                <p style="font-size:12.5px; color:var(--text-muted); margin-top:0;">
+                  Copy a signed invitation link or verify a state packet from a remote opponent.
+                </p>
+                <button type="button" class="tt-btn" id="tt-btn-copy-invite" style="width:100%; margin-bottom:6px;">📋 COPY ROOM INVITE CODE</button>
+                <button type="button" class="tt-btn ghost" id="tt-btn-disconnect-room" style="width:100%;">🔌 DISCONNECT ROOM</button>
+                <div id="tt-mp-feedback" style="margin-top:8px; font-family:var(--font-mono); font-size:11.5px; color:var(--neon-green);"></div>
+              </div>
+            </div>
+          </div>
+
+          <aside class="tt-side-panel">
+            <div class="tt-panel-box">
+              <h3 class="tt-panel-title">FAIR-PLAY MONITOR</h3>
+              <ul style="margin:0; padding-left:16px; font-size:12.5px; color:var(--text-muted); line-height:1.5;">
+                <li>Every move is validated by <code>AuthoritativeValidator</code> before state mutation.</li>
+                <li>Duplicate turn packets, out-of-turn actions, and occupied cell overwrites are rejected.</li>
+                <li>Cryptographic FNV-1a board state hashes verify synchronization across peers.</li>
+              </ul>
+            </div>
+          </aside>
+        </div>
+      </section>
+
+      <!-- VIEW 4: SEASONAL TOURNAMENT -->
+      <section class="tt-view" id="view-tournament">
+        <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px; margin-bottom:12px;">
+          <div>
+            <h2 style="margin:0 !important; font-family:var(--font-display); font-size:clamp(16px, 2.5vw, 20px);">🏆 CYBER CUP — 8-CONTENDER ELIMINATION</h2>
+            <span style="font-size:12.5px; color:var(--text-muted);">Win 3 consecutive bracket rounds to claim the Seasonal Grand Champion title.</span>
+          </div>
+          <div style="display:flex; gap:8px; flex-wrap:wrap;">
+            <button type="button" class="tt-btn gold" id="tt-btn-play-tourney-match">⚔️ PLAY NEXT MATCH</button>
+            <button type="button" class="tt-btn ghost" id="tt-btn-reset-tourney">🔄 RESET BRACKET</button>
+          </div>
+        </div>
+
+        <div class="tt-bracket" id="tt-bracket-container">
+          <!-- Rendered dynamically -->
+        </div>
+      </section>
+
+      <!-- VIEW 5: PROFILE, STATISTICS & LEADERBOARD -->
+      <section class="tt-view" id="view-stats">
+        <div class="tt-stat-grid">
+          <div class="tt-stat-card">
+            <div class="tt-stat-val" id="st-elo">1200</div>
+            <div class="tt-stat-lbl">Ranked ELO Rating</div>
+          </div>
+          <div class="tt-stat-card">
+            <div class="tt-stat-val" id="st-wins" style="color:var(--neon-green);">0</div>
+            <div class="tt-stat-lbl">Total Victories</div>
+          </div>
+          <div class="tt-stat-card">
+            <div class="tt-stat-val" id="st-losses" style="color:var(--neon-o);">0</div>
+            <div class="tt-stat-lbl">Total Defeats</div>
+          </div>
+          <div class="tt-stat-card">
+            <div class="tt-stat-val" id="st-draws" style="color:var(--neon-gold);">0</div>
+            <div class="tt-stat-lbl">Tactical Draws</div>
+          </div>
+          <div class="tt-stat-card">
+            <div class="tt-stat-val" id="st-survival">Wave 1</div>
+            <div class="tt-stat-lbl">Best Survival Wave</div>
+          </div>
+        </div>
+
+        <div class="tt-arena-layout">
+          <div class="tt-panel-box">
+            <h3 class="tt-panel-title">VERIFIED LADDER &amp; AI TIER BENCHMARKS</h3>
+            <p style="font-size:12px; color:var(--text-muted); margin-top:0;">
+              No fabricated online players. Shows your verified profile alongside official AI Reference Tiers and any synced local/cloud challengers.
+            </p>
+            <div id="tt-leaderboard-list" style="display:flex; flex-direction:column; gap:6px;"></div>
+          </div>
+
+          <div class="tt-panel-box">
+            <h3 class="tt-panel-title">COMMANDER PROFILE</h3>
+            <div class="tt-form-group">
+              <label for="tt-input-callsign">Player Callsign</label>
+              <input type="text" id="tt-input-callsign" class="tt-input" value="CYBER_RUNNER" maxlength="18" />
+            </div>
+            <button type="button" class="tt-btn" id="tt-btn-save-profile" style="width:100%; margin-bottom:8px;">💾 SAVE CALLSIGN</button>
+            <button type="button" class="tt-btn crimson" id="tt-btn-reset-stats" style="width:100%;">🗑️ RESET LOCAL STATS</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- VIEW 6: SETTINGS & AUTOMATED TEST SUITE -->
+      <section class="tt-view" id="view-settings">
+        <div class="tt-arena-layout">
+          <div class="tt-panel-box">
+            <h3 class="tt-panel-title">AUDIO, VISUAL &amp; ACCESSIBILITY SETTINGS</h3>
+            <div class="tt-form-group">
+              <label for="tt-set-fx">Visual Effects &amp; Glow Quality</label>
+              <select id="tt-set-fx" class="tt-select">
+                <option value="high">High Cyberpunk Glow + Particles</option>
+                <option value="off">Disabled Effects (High-Contrast Readability Mode)</option>
+              </select>
+            </div>
+            <div class="tt-form-group">
+              <label for="tt-set-motion">Motion &amp; Animations</label>
+              <select id="tt-set-motion" class="tt-select">
+                <option value="full">Full Smooth Animations</option>
+                <option value="reduced">Reduced Motion (Instant Transitions)</option>
+              </select>
+            </div>
+            <div class="tt-form-group">
+              <label for="tt-set-sfx">Procedural Synth Sound Effects</label>
+              <select id="tt-set-sfx" class="tt-select">
+                <option value="on">Enabled (Web Audio Cyber Synth)</option>
+                <option value="off">Muted</option>
+              </select>
+            </div>
+            <div class="tt-form-group">
+              <label for="tt-set-music">Ambient Cyberpunk Drone Pad</label>
+              <select id="tt-set-music" class="tt-select">
+                <option value="off">Off</option>
+                <option value="on">Active</option>
+              </select>
+            </div>
+            <div class="tt-form-group">
+              <label for="tt-set-lang">Interface Language (Localization)</label>
+              <select id="tt-set-lang" class="tt-select">
+                <option value="en">English (EN)</option>
+                <option value="hi">हिन्दी / Hinglish (HI)</option>
+                <option value="es">Español (ES)</option>
+              </select>
+            </div>
+            <div class="tt-form-group">
+              <label for="tt-set-firebase">Optional Firebase Realtime DB Endpoint (For Cloud Rooms)</label>
+              <input type="url" id="tt-set-firebase" class="tt-input" placeholder="https://your-project-default-rtdb.firebaseio.com" />
+            </div>
+          </div>
+
+          <div class="tt-panel-box">
+            <h3 class="tt-panel-title">🧪 AUTOMATED SYSTEM VERIFICATION TESTS</h3>
+            <p style="font-size:12.5px; color:var(--text-muted); margin-top:0;">
+              Run built-in unit &amp; integration tests verifying legal moves, win detection, draws, Ultimate TTT routing, Alpha-Beta Minimax optimality, Neon Reactor energy math, and unauthorized/stale move rejection.
+            </p>
+            <button type="button" class="tt-btn gold" id="tt-btn-run-tests" style="width:100%; margin-bottom:10px;">▶️ EXECUTE ALL 12 AUTOMATED TESTS</button>
+            <div id="tt-test-output" style="font-family:var(--font-mono); font-size:11px; max-height:240px; overflow-y:auto; background:#040611; padding:10px; border-radius:8px; border:1px solid rgba(255,255,255,0.1);">
+              Click "EXECUTE ALL 12 AUTOMATED TESTS" to run diagnostics...
+            </div>
+          </div>
+        </div>
+      </section>
+    </div>
+  </div>
+
+  <!-- External JavaScript Link -->
+  <script src="script.js"></script>
+</body>
+</html>
